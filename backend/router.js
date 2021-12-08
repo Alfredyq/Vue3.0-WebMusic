@@ -14,6 +14,9 @@ const getSecuritySign = require('./sign')
 const ERR_OK = 0
 const token = 5381
 
+// 歌曲图片加载失败时使用的默认图片
+const fallbackPicUrl = 'https://y.gtimg.cn/mediastyle/music_v11/extra/default_300x300.jpg?max_age=31536000'
+
 // 公共参数
 const commonParams = {
   g_tk: token,
@@ -46,11 +49,54 @@ function get(url, params) {
   })
 }
 
+// 处理歌曲列表
+function handleSongList(list) {
+  const songList = []
+
+  list.forEach((item) => {
+    const info = item.songInfo || item
+    if (info.pay.pay_play !== 0 || !info.interval) {
+      // 过滤付费歌曲和获取不到时长的歌曲
+      return
+    }
+
+    // 构造歌曲的数据结构
+    const song = {
+      id: info.id,
+      mid: info.mid,
+      name: info.name,
+      singer: mergeSinger(info.singer),
+      url: '', // 在当前url拿不到，而且每天都在变化，在另一个接口获取
+      duration: info.interval,
+      pic: info.album.mid ? `https://y.gtimg.cn/music/photo_new/T002R800x800M000${info.album.mid}.jpg?max_age=2592000` : fallbackPicUrl,
+      album: info.album.name
+    }
+
+    songList.push(song)
+  })
+
+  return songList
+}
+
+// 合并多个歌手的姓名
+function mergeSinger(singer) {
+  const ret = []
+  if (!singer) {
+    return ''
+  }
+  singer.forEach((s) => {
+    ret.push(s.name)
+  })
+  return ret.join('/')
+}
+
 // 注册后端路由
 function registerRouter(app) {
   registerRecommend(app)
 
   registerSingerList(app)
+
+  registerSingerDetail(app)
 }
 
 // 注册推荐列表接口路由。这里包括了轮播图的接口和歌单的接口。
@@ -254,6 +300,47 @@ function registerSingerList(app) {
       }
     })
   }
+}
+
+// 注册歌手详情接口路由
+function registerSingerDetail(app) {
+  app.get('/api/getSingerDetail', (req, res) => {
+    const url = 'https://u.y.qq.com/cgi-bin/musics.fcg'
+
+    const data = JSON.stringify({
+      comm: { ct: 24, cv: 0 },
+      singerSongList: {
+        method: 'GetSingerSongList',
+        param: { order: 1, singerMid: req.query.mid, begin: 0, num: 100 },
+        module: 'musichall.song_list_server'
+      }
+    })
+
+    const randomKey = getRandomVal('getSingerSong')
+    const sign = getSecuritySign(data)
+
+    get(url, {
+      sign,
+      '-': randomKey,
+      data
+    }).then((response) => {
+      const data = response.data
+      if (data.code === ERR_OK) {
+        const list = data.singerSongList.data.songList
+        // 歌单详情、榜单详情接口都有类似处理逻辑，所以封装成函数
+        const songList = handleSongList(list)
+
+        res.json({
+          code: ERR_OK,
+          result: {
+            songs: songList
+          }
+        })
+      } else {
+        res.json(data)
+      }
+    })
+  })
 }
 
 module.exports = registerRouter

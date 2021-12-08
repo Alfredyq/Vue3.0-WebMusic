@@ -17,6 +17,7 @@
             v-for="item in group.list"
             :key="item.id"
             class="item"
+            @click="onItemClick(item)"
           >
             <img class="avatar" v-lazy="item.pic">
             <span class="name">{{item.name}}</span>
@@ -74,11 +75,19 @@ export default {
       }
     }
   },
-  setup(props) {
+  emits: ['select'],
+  setup(props, { emit }) {
     const { groupRef, onScroll, fixedTitle, fixedStyle, currentIndex } = useFixed(props)
     const { shortcutList, scrollRef, onShortcutTouchStart, onShortcutTouchMove } = useShortcut(props, groupRef)
 
+    function onItemClick(item) {
+      console.log('歌手已点击')
+      // 通过emit方法，定义一个自定义事件，歌手页面点击选择某位歌手，将数据派发给外面
+      emit('select', item) // 这个item就是一个singer
+    }
+
     return {
+      onItemClick,
       // fixed 钩子返回的
       groupRef,
       onScroll,

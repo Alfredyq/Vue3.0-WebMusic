@@ -6,3 +6,9 @@ export function getSingerList() {
   // 这里的 url 必须和 router.js 里面后端代理的路由接口的 url 一致
   return get('/api/getSingerList')
 }
+
+export function getSingerDetail(singer) {
+  return get('/api/getSingerDetail', {
+    mid: singer.mid // mid是前端发送给node作为参数去查询的
+  })
+}
