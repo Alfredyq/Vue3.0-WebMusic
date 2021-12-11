@@ -13,9 +13,12 @@
     <!--  图片上面设置一层半透明层   -->
       <div class="filter"></div>
     </div>
+    <!--  probe-type：派发 scroll事件。设置为3的时候，任何时候都派发 scroll 事件   -->
     <scroll class="list"
             :style="scrollStyle"
             v-loading="loading"
+            :probe-type="3"
+            @scroll="onScroll"
     >
       <div class="song-list-wrapper">
         <song-list :songs="songs"></song-list>
@@ -27,6 +30,8 @@
 <script>
 import Scroll from '../base/scroll/scroll'
 import SongList from '../base/song-list/song-list'
+
+const RESERVED_HEIGHT = 40 // 设置一个高度常量，歌手的歌单列表最多升到离页面顶端40px位置处
 
 export default {
   name: 'music-list',
@@ -47,30 +52,60 @@ export default {
   },
   data() {
     return {
-      imageHeight: 0
+      imageHeight: 0,
+      scrollY: 0, // 歌单列表滚动的Y值距离，向上为正，向下为负
+      maxTranslateY: 0 // 歌手的歌单列表最大能滚动的距离
     }
   },
   methods: {
     goBack() {
       // 回退方法，很简单就能实现
       this.$router.back()
+    },
+    onScroll(pos) {
+      this.scrollY = -pos.y // 因为y值是一个正值
     }
   },
   computed: {
     bgImageStyle() {
+      const scrollY = this.scrollY
+      let zIndex = 0
+      let paddingTop = '70%'
+      let height = 0
+      let translateZ = 0 // 解决ios移动端问题，这个样式等于z-index
+
+      // 歌单列表滚动的距离超过最大滚动距离后
+      if (scrollY > this.maxTranslateY) {
+        zIndex = 10
+        paddingTop = 0
+        height = `${RESERVED_HEIGHT}px` // 可以写成固定40px，但不够优雅
+        translateZ = 1
+      }
+
+      // 向下拉歌单列表时
+      let scale = 1
+      if (scrollY < 0) {
+        scale = 1 + Math.abs(scrollY / this.imageHeight)
+      }
+
       return {
-        backgroundImage: `url(${this.pic})`
+        zIndex,
+        paddingTop,
+        height,
+        backgroundImage: `url(${this.pic})`,
+        transform: `scale(${scale})translateZ(${translateZ}px)`
       }
     },
     scrollStyle() {
       return {
-        top: `${this.imageHeight}px`
+        top: `${this.imageHeight}px` // 根据图片的高度，设置歌单列表离顶部的距离
       }
     }
   },
   mounted () {
     // 获取class为bg-image的div高度
     this.imageHeight = this.$refs.bgImage.clientHeight
+    this.maxTranslateY = this.imageHeight - RESERVED_HEIGHT
   }
 }
 </script>
@@ -110,7 +145,6 @@ export default {
     width: 100%;
     transform-origin: top;
     background-size: cover;
-    padding-Top: 70%;
     .play-btn-wrapper {
       position: absolute;
       bottom: 20px;
