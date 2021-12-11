@@ -35,6 +35,12 @@ function getRandomVal(prefix = '') {
   return prefix + (Math.random() + '').replace('0.', '')
 }
 
+// 获取一个随机 uid
+function getUid() {
+  const t = (new Date()).getUTCMilliseconds()
+  return '' + Math.round(2147483647 * Math.random()) * t % 1e10
+}
+
 // 对 axios get 请求的封装
 function get(url, params) {
   return axios.get(url, {
@@ -46,6 +52,18 @@ function get(url, params) {
     // 合并公共请求参数，将 commonParams 这个公共参数放在后端进行封装。
     // 这个公共参数是第三方服务接口需要的，但跟我们本身的业务无关，所以放在后端封装好了
     params: Object.assign({}, commonParams, params)
+  })
+}
+
+// 对 axios post 请求的封装
+function post(url, params) {
+  return axios.post(url, params, {
+    // 修改请求的 headers 值，让第三方服务接口认为当前请求是合法的。
+    headers: {
+      referer: 'https://y.qq.com/',
+      origin: 'https://y.qq.com/',
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
   })
 }
 
@@ -92,14 +110,16 @@ function mergeSinger(singer) {
 
 // 注册后端路由
 function registerRouter(app) {
-  registerRecommend(app)
+  registerRecommend(app) // 注册推荐列表接口路由
 
-  registerSingerList(app)
+  registerSingerList(app) // 注册歌手列表接口路由
 
-  registerSingerDetail(app)
+  registerSingerDetail(app) // 注册歌手详情接口路由
+
+  registerSongsUrl(app) // 注册歌曲 url 获取接口路由
 }
 
-// 注册推荐列表接口路由。这里包括了轮播图的接口和歌单的接口。
+//  注册推荐列表接口路由。这里包括了轮播图的接口和歌单的接口。
 function registerRecommend(app) {
   // app是一个传进来的express实例，用get方法去实现代理后端路由接口服务
   app.get('/api/getRecommend', (req, res) => {
@@ -339,6 +359,87 @@ function registerSingerDetail(app) {
       } else {
         res.json(data)
       }
+    })
+  })
+}
+
+// 注册歌曲 url 获取接口路由
+// 因为歌曲的 url 每天都在变化，所以需要单独的接口根据歌曲的 mid 获取
+function registerSongsUrl(app) {
+  app.get('/api/getSongsUrl', (req, res) => {
+    const mid = req.query.mid
+
+    let midGroup = [] // [[1,2,...,100],[101, 102,...,200],[201,201,...]]
+    // 第三方接口只支持最多处理 100 条数据，所以如果超过 100 条数据，我们要把数据按每组 100 条切割，发送多个请求
+    if (mid.length > 100) {
+      const groupLen = Math.ceil(mid.length / 100)
+      for (let i = 0; i < groupLen; i++) {
+        midGroup.push(mid.slice(i * 100, (100 * (i + 1))))
+      }
+    } else {
+      midGroup = [mid]
+    }
+
+    // 以歌曲的 mid 为 key，存储歌曲 URL。传给前端的
+    const urlMap = {}
+
+    // 发送请求，并处理返回的 数据
+    function process(mid) {
+      // 构造第三方服务接口所需要的数据，必须按照它的要求，包括签名和批量url
+      const data = {
+        req_0: {
+          module: 'vkey.GetVkeyServer',
+          method: 'CgiGetVkey',
+          param: {
+            guid: getUid(),
+            songmid: mid,
+            songtype: new Array(mid.length).fill(0),
+            uin: '0',
+            loginflag: 0,
+            platform: '23',
+            h5to: 'speed'
+          }
+        },
+        comm: {
+          g_tk: token,
+          uin: '0',
+          format: 'json',
+          platform: 'h5'
+        }
+      }
+
+      const sign = getSecuritySign(JSON.stringify(data))
+      const url = `https://u.y.qq.com/cgi-bin/musics.fcg?_=${getRandomVal()}&sign=${sign}`
+
+      // 发送 post 请求
+      return post(url, data).then((response) => {
+        const data = response.data
+        if (data.code === ERR_OK) {
+          const midInfo = data.req_0.data.midurlinfo
+          const sip = data.req_0.data.sip
+          const domain = sip[sip.length - 1]
+          midInfo.forEach((info) => {
+            // 获取歌曲的真实播放 URL，格式 key：url
+            urlMap[info.songmid] = domain + info.purl
+          })
+        }
+      })
+    }
+
+    // 构造多个 Promise 请求，因为 midGroup 是个数组，里面有好几组数据
+    const requests = midGroup.map((mid) => {
+      return process(mid)
+    })
+
+    // 并行发送多个请求
+    return Promise.all(requests).then(() => {
+      // 所有请求响应完毕，urlMap 也就构造完毕了，最后发送给前端
+      res.json({
+        code: ERR_OK,
+        result: {
+          map: urlMap
+        }
+      })
     })
   })
 }
