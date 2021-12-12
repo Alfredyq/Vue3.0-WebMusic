@@ -4,7 +4,13 @@
       :data="singers"
       @select="selectSinger"
     ></index-list>
-    <router-view :singer="selectedSinger"></router-view>
+<!--    <router-view :singer="selectedSinger"></router-view>-->
+<!--    为路由的跳转添加过渡效果，跳入 singer-detail 页面-->
+    <router-view v-slot="{ Component }">
+      <transition appear name="slide">
+        <component :is="Component" :singer="selectedSinger"/>
+      </transition>
+    </router-view>
   </div>
 </template>
 

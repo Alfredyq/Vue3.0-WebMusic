@@ -65,18 +65,18 @@ export default {
   // 发送请求肯定是在推荐页面的生命周期开始的时候，但 发送请求->获取到数据 这个过程肯定是异步的，所以将这个create过程设置为异步
   // 在钩子函数内部发送请求然后获取数据，赋值给data
   async created () {
-    // const result = await getRecommend()
-    // console.log(result)
-    // this.sliders = result.sliders
-    // this.albums = result.albums
+    const result = await getRecommend()
+    console.log(result)
+    this.sliders = result.sliders
+    this.albums = result.albums
 
     // 延时两秒请求资源，测试 loading 的效果
-    setTimeout(async () => {
-      const result = await getRecommend()
-      console.log(result)
-      this.sliders = result.sliders
-      this.albums = result.albums
-    }, 2000)
+    // setTimeout(async () => {
+    //   const result = await getRecommend()
+    //   console.log(result)
+    //   this.sliders = result.sliders
+    //   this.albums = result.albums
+    // }, 2000)
   }
 }
 </script>
