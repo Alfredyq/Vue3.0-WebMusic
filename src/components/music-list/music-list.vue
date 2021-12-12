@@ -11,7 +11,9 @@
          ref="bgImage"
     >
     <!--  图片上面设置一层半透明层   -->
-      <div class="filter"></div>
+      <div class="filter"
+           :style="filterStyle"
+      ></div>
     </div>
     <!--  probe-type：派发 scroll事件。设置为3的时候，任何时候都派发 scroll 事件   -->
     <scroll class="list"
@@ -68,6 +70,7 @@ export default {
   },
   computed: {
     bgImageStyle() {
+      // 根据歌单列表的拖拽情况，实时调整背景图片的样式
       const scrollY = this.scrollY
       let zIndex = 0
       let paddingTop = '70%'
@@ -99,6 +102,19 @@ export default {
     scrollStyle() {
       return {
         top: `${this.imageHeight}px` // 根据图片的高度，设置歌单列表离顶部的距离
+      }
+    },
+    filterStyle() {
+      // 设置背景图片的高斯模糊效果，blur值越大，图片越模糊
+      let blur = 0
+      const scrollY = this.scrollY
+      const imageHeight = this.imageHeight
+      if (scrollY >= 0) {
+        // 因为图片推到最高，高斯模糊效果应该达到最大，所以应该设置一个最大值，那就是当图片推到最高时
+        blur = Math.min(this.maxTranslateY / imageHeight, scrollY / imageHeight) * 20
+      }
+      return {
+        backdropFilter: `blur(${blur}px)`
       }
     }
   },
