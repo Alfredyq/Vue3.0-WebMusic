@@ -19,6 +19,7 @@
     <scroll class="list"
             :style="scrollStyle"
             v-loading="loading"
+            v-no-result:[noResultText]="noResult"
             :probe-type="3"
             @scroll="onScroll"
     >
@@ -50,7 +51,11 @@ export default {
     },
     title: String,
     pic: String, // 背景图片
-    loading: Boolean
+    loading: Boolean,
+    noResultText: {
+      type: String,
+      default: '抱歉，没有找到可播放的歌曲'
+    }
   },
   data() {
     return {
@@ -69,6 +74,10 @@ export default {
     }
   },
   computed: {
+    noResult() {
+      // 当loading加载完毕，且获取的数据长度为0，返回true，触发no-result指令
+      return !this.loading && !this.songs.length
+    },
     bgImageStyle() {
       // 根据歌单列表的拖拽情况，实时调整背景图片的样式
       const scrollY = this.scrollY

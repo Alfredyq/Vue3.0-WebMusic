@@ -4,6 +4,7 @@ import router from './router'
 import store from './store'
 import LazyPlugin from 'vue3-lazy'
 import loadingDirective from './components/base/loading/directive'
+import noResultDirective from './components/base/no-result/directive'
 
 // 引入全局样式文件
 import '@/assets/scss/index.scss'
@@ -19,6 +20,12 @@ import '@/assets/scss/index.scss'
 
 /** *********** 版本三 *********** **/
 // 在当前app下，全局注册 loadingDirective，那么在这个app内所有的组件都可以使用自定义的 v-loading 指令
+// createApp(App).use(store).use(router).use(LazyPlugin, {
+//   loading: require('../src/assets/imag/img.png')
+// }).directive('loading', loadingDirective).mount('#app')
+
+/** *********** 版本四 *********** **/
+// 在版本三基础上，添加 v-no-result 指令
 createApp(App).use(store).use(router).use(LazyPlugin, {
   loading: require('../src/assets/imag/img.png')
-}).directive('loading', loadingDirective).mount('#app')
+}).directive('loading', loadingDirective).directive('no-result', noResultDirective).mount('#app')
