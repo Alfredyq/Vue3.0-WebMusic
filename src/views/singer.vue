@@ -11,6 +11,8 @@
 <script>
 import { getSingerList } from '../service/singer'
 import IndexList from '../components/index-list/index-list'
+import storage from 'good-storage'
+import { SINGER_KEY } from '../assets/js/constant'
 
 export default {
   name: 'singer',
@@ -35,9 +37,13 @@ export default {
     selectSinger(singer) {
       console.log('点击事件')
       this.selectedSinger = singer
+      this.cacheSinger(singer) // 缓存singer到sessionStorage中
       this.$router.push({
         path: `/singer/${singer.mid}`
       })
+    },
+    cacheSinger(singer) {
+      storage.session.set(SINGER_KEY, singer) // 使用sessionStorage缓存数据
     }
   }
 }
