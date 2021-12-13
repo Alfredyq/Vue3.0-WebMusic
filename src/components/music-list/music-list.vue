@@ -24,7 +24,10 @@
             @scroll="onScroll"
     >
       <div class="song-list-wrapper">
-        <song-list :songs="songs"></song-list>
+<!--        调用song-list的地方就能监听到 song-list 传出来的 selectItem 事件，这里的 select是 song-list自定义的 emit派发事件，名字必须保持一致-->
+        <song-list :songs="songs"
+                   @selected="selectItem"
+        ></song-list>
       </div>
     </scroll>
   </div>
@@ -33,6 +36,7 @@
 <script>
 import Scroll from '../base/scroll/scroll'
 import SongList from '../base/song-list/song-list'
+  import { mapActions } from 'vuex' // Vuex的语法糖，https://vuex.vuejs.org/zh/guide/actions.html#%E5%9C%A8%E7%BB%84%E4%BB%B6%E4%B8%AD%E5%88%86%E5%8F%91-action
 
 const RESERVED_HEIGHT = 40 // 设置一个高度常量，歌手的歌单列表最多升到离页面顶端40px位置处
 
@@ -71,7 +75,19 @@ export default {
     },
     onScroll(pos) {
       this.scrollY = -pos.y // 因为y值是一个正值
-    }
+    },
+    // 拿到 song-list 组件传过来的数据
+    selectItem({ song, index }) {
+      // 在这里就可以派发一个Action
+      this.selectPlay({
+        list: this.songs,
+        index
+      })
+    },
+    // 语法糖 mapActions 辅助函数将组件的 methods 映射为 store.dispatch 调用
+    ...mapActions([
+      'selectPlay'
+    ])
   },
   computed: {
     noResult() {
