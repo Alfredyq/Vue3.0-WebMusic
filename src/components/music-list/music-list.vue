@@ -10,7 +10,18 @@
          :style="bgImageStyle"
          ref="bgImage"
     >
-    <!--  图片上面设置一层半透明层   -->
+      <div class="play-btn-wrapper"
+           :style="playBtnStyle"
+      >
+        <div class="play-btn"
+             v-show="songs.length > 0"
+             @click="random"
+        >
+          <i class="icon-play"></i>
+          <span class="text">随机播放全部</span>
+        </div>
+      </div>
+      <!--  图片上面设置一层半透明层   -->
       <div class="filter"
            :style="filterStyle"
       ></div>
@@ -36,7 +47,7 @@
 <script>
 import Scroll from '../base/scroll/scroll'
 import SongList from '../base/song-list/song-list'
-  import { mapActions } from 'vuex' // Vuex的语法糖，https://vuex.vuejs.org/zh/guide/actions.html#%E5%9C%A8%E7%BB%84%E4%BB%B6%E4%B8%AD%E5%88%86%E5%8F%91-action
+import { mapActions } from 'vuex' // Vuex的语法糖，https://vuex.vuejs.org/zh/guide/actions.html#%E5%9C%A8%E7%BB%84%E4%BB%B6%E4%B8%AD%E5%88%86%E5%8F%91-action
 
 const RESERVED_HEIGHT = 40 // 设置一个高度常量，歌手的歌单列表最多升到离页面顶端40px位置处
 
@@ -84,9 +95,13 @@ export default {
         index
       })
     },
+    random() {
+      this.randomPlay(this.songs)
+    },
     // 语法糖 mapActions 辅助函数将组件的 methods 映射为 store.dispatch 调用
     ...mapActions([
-      'selectPlay'
+      'selectPlay',
+      'randomPlay'
     ])
   },
   computed: {
@@ -122,6 +137,16 @@ export default {
         height,
         backgroundImage: `url(${this.pic})`,
         transform: `scale(${scale})translateZ(${translateZ}px)`
+      }
+    },
+    playBtnStyle() {
+      let display = ''
+      if (this.scrollY >= this.maxTranslateY) {
+        // 歌曲列表滚动到最上方的时候，随机播放按钮不显示
+        display = 'none'
+      }
+      return {
+        display
       }
     },
     scrollStyle() {
