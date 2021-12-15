@@ -15,8 +15,32 @@
         <h1 class="title">{{ currentSong.name }}</h1>
         <h2 class="subtitle">{{ currentSong.singer }}</h2>
       </div>
+      <div class="bottom">
+        <div class="operators">
+          <div class="icon i-left">
+            <i class="icon-sequence"></i>
+          </div>
+          <div class="icon i-left" :class="disableCls">
+            <i class="icon-prev" @click="prev" ></i>
+          </div>
+          <div class="icon i-center" :class="disableCls">
+          <!--  根据播放状态改变播放按钮  -->
+            <i :class="playIcon" @click="togglePlay"></i>
+          </div>
+          <div class="icon i-right" :class="disableCls">
+            <i class="icon-next" @click="next" ></i>
+          </div>
+          <div class="icon i-right">
+            <i class="icon-not-favorite"></i>
+          </div>
+        </div>
+      </div>
     </div>
-    <audio ref="audioRef"></audio>
+    <audio ref="audioRef"
+           @pause="pause"
+           @canplay="ready"
+           @error="error"
+    ></audio>
   </div>
 </template>
 
@@ -28,28 +52,133 @@ export default {
   name: 'player',
   setup() {
     const audioRef = ref(null)
+    const songReady = ref(false)
 
     // vuex 用 computed 是想让数据是响应式的
     const store = useStore()
     const fullScreen = computed(() => store.state.fullScreen)
-    const currentSong = computed(() => store.getters.currentSong)
-    const playing = computed(() => store.state.playing)
+    const currentSong = computed(() => store.getters.currentSong) // 当前播放曲目
+    const playing = computed(() => store.state.playing) // 播放状态
     const currentIndex = computed(() => store.state.currentIndex)
     const playMode = computed(() => store.state.playMode)
+    const playList = computed(() => store.state.playList)
 
+    const playIcon = computed(() => {
+      return playing.value ? 'icon-pause' : 'icon-play'
+    })
+
+    const disableCls = computed(() => {
+      // 歌曲未准备好的时候不允许操作 上一首、下一首 和 暂停按钮
+      return songReady.value ? '' : 'disable'
+    })
+    /** *************  watch 监控  ************* **/
     // 监控 currentSong 的变化，如果发生变化就能拿到 newSong，然后改变 player 页面的值
     watch(currentSong, (newSong) => {
       if (!newSong.id || !newSong.url) {
         return
       }
+      songReady.value = false // 每次切歌的时候，先把 songReady置为 false
       const audioEl = audioRef.value // 通过 audioRef 拿到 audio 的dom对象
       audioEl.src = newSong.url
-      audioEl.play() // 通过 audio 元素内置方法，播放歌曲
+      console.log('watch currentSong!')
+      audioEl.play() // 通过 audio 元素内置方法，播放歌曲。等歌曲缓冲好会触发 canplay，将 songReady置为 true
     })
 
+    watch(playing, (newPlaying) => {
+      if (!songReady.value) {
+        // 歌曲未准备好
+        return
+      }
+
+      const audioEl = audioRef.value
+      console.log('audio.pause()')
+      newPlaying ? audioEl.play() : audioEl.pause()
+    })
+
+    /** *************  自定义的方法 ************* **/
     function goBack() {
       console.log('click back!')
       store.commit('setFullScreen', false)
+    }
+
+    function togglePlay() {
+      // 将 Vuex 中的播放状态取反
+      store.commit('setPlayingState', !playing.value)
+    }
+
+    function pause() { // 因为电脑待机等等其他外界因素导致 audio元素自己触发了 audio.pause()，我们在这里也要对应的对数据进行改变
+      // 关掉播放器
+      store.commit('setPlayingState', false)
+    }
+
+    function prev() {
+      const list = playList.value
+      if (!songReady.value || !list.length) {
+        // 如果列表为空，就啥也不做
+        return
+      }
+
+      if (list.length === 1) {
+        // 当前播放列表只有一首歌，那就单曲循环播放当前这首歌
+        loop()
+      } else {
+        let index = currentIndex.value - 1
+        if (index === -1) {
+          // 如果当前播放的是第一首歌，就把索引放到播放列表的最后一首
+          index = list.length - 1
+        }
+        // 提交数据
+        store.commit('setCurrentIndex', index)
+        if (!playing.value) {
+          // 如果当前是暂停状态，按下上一首按钮，则跳到上一首开始播放
+          store.commit('setPlayingState', true)
+        }
+      }
+    }
+
+    function next() {
+      const list = playList.value
+      if (!songReady.value || !list.length) {
+        // 如果列表为空，就啥也不做
+        return
+      }
+
+      if (list.length === 1) {
+        // 当前播放列表只有一首歌，那就单曲循环播放当前这首歌
+        loop()
+      } else {
+        let index = currentIndex.value + 1
+        if (index === list.length) {
+          // 如果播放的是最后一首歌曲，则从播放列表从头开始播放
+          index = 0
+        }
+        // 提交数据
+        store.commit('setCurrentIndex', index)
+        if (!playing.value) {
+          // 如果当前是暂停状态，按下下一首按钮，则跳到下一首开始播放
+          store.commit('setPlayingState', true)
+        }
+      }
+    }
+
+    function loop() { // 单曲从头播放
+      const audioEl = audioRef.value
+      audioEl.currentTime = 0 // 设置当前播放时间为 0，也就是实现从头播放
+      audioEl.play()
+    }
+
+    function ready() {
+      if (songReady.value) {
+        // 如果已经ready了，就直接返回
+        return
+      }
+      songReady.value = true
+    }
+
+    function error() {
+      // 有时候歌曲加载有问题，可能无法播放，就不会触发canplay事件让songReady为true，反而会触发一个error事件
+      // 但是 songReady为false时，不能切歌，所以在error事件中，将songReady置为true，使其能够切歌
+      songReady.value = true
     }
 
     return {
@@ -61,8 +190,18 @@ export default {
       playing,
       currentIndex,
       playMode,
+      playList,
+      // dom
+      playIcon,
+      disableCls,
       // function
-      goBack
+      goBack,
+      togglePlay,
+      pause,
+      prev,
+      next,
+      ready,
+      error
     }
   }
 }
