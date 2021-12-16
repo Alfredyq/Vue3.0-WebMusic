@@ -18,7 +18,7 @@
       <div class="bottom">
         <div class="operators">
           <div class="icon i-left">
-            <i class="icon-sequence"></i>
+            <i :class="modeIcon" @click="changeMode"></i>
           </div>
           <div class="icon i-left" :class="disableCls">
             <i class="icon-prev" @click="prev" ></i>
@@ -47,10 +47,12 @@
 <script>
 import { useStore } from 'vuex'
 import { computed, watch, ref } from 'vue'
+import useMode from './use-mode'
 
 export default {
   name: 'player',
   setup() {
+    // data
     const audioRef = ref(null)
     const songReady = ref(false)
 
@@ -63,14 +65,17 @@ export default {
     const playMode = computed(() => store.state.playMode)
     const playList = computed(() => store.state.playList)
 
+    // computed
     const playIcon = computed(() => {
       return playing.value ? 'icon-pause' : 'icon-play'
     })
-
     const disableCls = computed(() => {
       // 歌曲未准备好的时候不允许操作 上一首、下一首 和 暂停按钮
       return songReady.value ? '' : 'disable'
     })
+
+    const { modeIcon, changeMode } = useMode()
+
     /** *************  watch 监控  ************* **/
     // 监控 currentSong 的变化，如果发生变化就能拿到 newSong，然后改变 player 页面的值
     watch(currentSong, (newSong) => {
@@ -191,9 +196,12 @@ export default {
       currentIndex,
       playMode,
       playList,
-      // dom
+      // computed
       playIcon,
       disableCls,
+      // 钩子函数
+      modeIcon,
+      changeMode,
       // function
       goBack,
       togglePlay,
