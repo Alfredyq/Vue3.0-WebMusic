@@ -1,5 +1,6 @@
 // constan：常量。这里时定义一些项目中共享的常量
 export const SINGER_KEY = '__singer__'
+export const FAVORITE_KEY = '__favorite__'
 
 // 歌曲播放模式
 export const PLAY_MODE = {

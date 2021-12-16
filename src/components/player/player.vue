@@ -31,7 +31,7 @@
             <i class="icon-next" @click="next" ></i>
           </div>
           <div class="icon i-right">
-            <i class="icon-not-favorite"></i>
+            <i :class="getFavoriteIcon(currentSong)" @click="toggleFavorite(currentSong)"></i>
           </div>
         </div>
       </div>
@@ -48,6 +48,7 @@
 import { useStore } from 'vuex'
 import { computed, watch, ref } from 'vue'
 import useMode from './use-mode'
+import useFavorite from './use-favorite'
 
 export default {
   name: 'player',
@@ -74,8 +75,9 @@ export default {
       return songReady.value ? '' : 'disable'
     })
 
+    // hooks
     const { modeIcon, changeMode } = useMode()
-
+    const { getFavoriteIcon, toggleFavorite } = useFavorite()
     /** *************  watch 监控  ************* **/
     // 监控 currentSong 的变化，如果发生变化就能拿到 newSong，然后改变 player 页面的值
     watch(currentSong, (newSong) => {
@@ -202,6 +204,8 @@ export default {
       // 钩子函数
       modeIcon,
       changeMode,
+      getFavoriteIcon,
+      toggleFavorite,
       // function
       goBack,
       togglePlay,
