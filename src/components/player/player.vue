@@ -16,6 +16,21 @@
         <h2 class="subtitle">{{ currentSong.singer }}</h2>
       </div>
       <div class="bottom">
+        <div class="progress-wrapper">
+          <!--    歌曲当前播放进度（分秒）    -->
+          <span class="time time-l">{{ formatTime(currentTime)}}</span>
+          <div class="progress-bar-wrapper">
+          <!--    监听 progress-bar emit传出来的两个事件 progress-changing 和 progress-changed   -->
+            <progress-bar
+              ref="barRef"
+              :progress="progress"
+              @progress-changing="onProgressChanging"
+              @progress-changed="onProgressChanged"
+            ></progress-bar>
+          </div>
+          <!--    歌曲完整播放长度（分秒）    -->
+          <span class="time time-r">{{ formatTime(currentSong.duration) }}</span>
+        </div>
         <div class="operators">
           <div class="icon i-left">
             <i :class="modeIcon" @click="changeMode"></i>
@@ -40,6 +55,8 @@
            @pause="pause"
            @canplay="ready"
            @error="error"
+           @timeupdate="updateTime"
+           @ended="end"
     ></audio>
   </div>
 </template>
@@ -49,13 +66,21 @@ import { useStore } from 'vuex'
 import { computed, watch, ref } from 'vue'
 import useMode from './use-mode'
 import useFavorite from './use-favorite'
+import ProgressBar from './progress-bar'
+import { formatTime } from '../../assets/js/util'
+import { PLAY_MODE } from '../../assets/js/constant'
 
 export default {
   name: 'player',
+  components: {
+    ProgressBar
+  },
   setup() {
     // data
     const audioRef = ref(null)
     const songReady = ref(false)
+    const currentTime = ref(0) // 歌曲当前播放时长
+    let progressChanging = false // 是否在拖动进度条
 
     // vuex 用 computed 是想让数据是响应式的
     const store = useStore()
@@ -66,7 +91,7 @@ export default {
     const playMode = computed(() => store.state.playMode)
     const playList = computed(() => store.state.playList)
 
-    // computed
+    /**  *************  computed  *************  **/
     const playIcon = computed(() => {
       return playing.value ? 'icon-pause' : 'icon-play'
     })
@@ -74,17 +99,24 @@ export default {
       // 歌曲未准备好的时候不允许操作 上一首、下一首 和 暂停按钮
       return songReady.value ? '' : 'disable'
     })
+    const progress = computed(() => {
+      // 计算歌曲当前播放进度 0-1之间的小数
+      // console.log(currentTime.value / currentSong.value.duration)
+      return currentTime.value / currentSong.value.duration
+    })
 
-    // hooks
+    /**  *************  hooks  *************  **/
     const { modeIcon, changeMode } = useMode()
     const { getFavoriteIcon, toggleFavorite } = useFavorite()
-    /** *************  watch 监控  ************* **/
+
+    /**  *************  watch 监控  *************  **/
     // 监控 currentSong 的变化，如果发生变化就能拿到 newSong，然后改变 player 页面的值
     watch(currentSong, (newSong) => {
       if (!newSong.id || !newSong.url) {
         return
       }
       songReady.value = false // 每次切歌的时候，先把 songReady置为 false
+      currentTime.value = 0 // 歌曲播放进度重置为0
       const audioEl = audioRef.value // 通过 audioRef 拿到 audio 的dom对象
       audioEl.src = newSong.url
       console.log('watch currentSong!')
@@ -102,7 +134,7 @@ export default {
       newPlaying ? audioEl.play() : audioEl.pause()
     })
 
-    /** *************  自定义的方法 ************* **/
+    /**  *************  自定义的方法 *************  **/
     function goBack() {
       console.log('click back!')
       store.commit('setFullScreen', false)
@@ -188,7 +220,38 @@ export default {
       songReady.value = true
     }
 
+    function end() { // audio元素播放完毕，根据播放模式选择是播放下一曲还是循环本首歌曲
+      currentTime.value = 0
+      if (playMode.value === PLAY_MODE.loop) {
+        loop()
+      } else {
+        next()
+      }
+    }
+
+    function updateTime(e) { // 根据 audio 播放的时候会不断触发 updateTime 事件，在这个事件中实时更新 currentTime
+      if (!progressChanging) { // 进度条在被拖动的时候不改变 currentTime，因为此时是根据手的拖动来计算的
+        currentTime.value = e.target.currentTime
+        // console.log(formatTime(currentTime.value))
+      }
+    }
+
+    function onProgressChanging(progress) { // 这里函数的参数都是从组件中 emit 传出来的事件的值
+      progressChanging = true
+      console.log('onProgressChanging: ' + progressChanging)
+      currentTime.value = currentSong.value.duration * progress // 修改进度条前面的时间
+    }
+
+    function onProgressChanged(progress) {
+      // 拖动完毕，改变 audio元素的播放
+      progressChanging = false
+      console.log('onProgressChanged: ' + progressChanging)
+      audioRef.value.currentTime = currentTime.value = currentSong.value.duration * progress
+    }
+
     return {
+      // data
+      currentTime,
       // ref
       audioRef,
       // Vuex
@@ -201,6 +264,7 @@ export default {
       // computed
       playIcon,
       disableCls,
+      progress,
       // 钩子函数
       modeIcon,
       changeMode,
@@ -213,7 +277,12 @@ export default {
       prev,
       next,
       ready,
-      error
+      error,
+      end,
+      updateTime,
+      formatTime,
+      onProgressChanging,
+      onProgressChanged
     }
   }
 }
