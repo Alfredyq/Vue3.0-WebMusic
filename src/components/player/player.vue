@@ -15,6 +15,22 @@
         <h1 class="title">{{ currentSong.name }}</h1>
         <h2 class="subtitle">{{ currentSong.singer }}</h2>
       </div>
+      <div class="middle">
+        <div class="middle-l" :style="middleLStyle">
+          <div class="cd-wrapper" ref="cdWrapperRef">
+            <div class="cd" ref="cdRef">
+              <img class="image"
+                   ref="cdImageRef"
+                   :class="cdCls"
+                   :src="currentSong.pic"
+              >
+            </div>
+          </div>
+<!--          <div class="playing-lyric-wrapper">-->
+<!--            <div class="playing-lyric">{{playingLyric}}</div>-->
+<!--          </div>-->
+        </div>
+      </div>
       <div class="bottom">
         <div class="progress-wrapper">
           <!--    歌曲当前播放进度（分秒）    -->
@@ -66,6 +82,7 @@ import { useStore } from 'vuex'
 import { computed, watch, ref } from 'vue'
 import useMode from './use-mode'
 import useFavorite from './use-favorite'
+import useCd from './use-cd'
 import ProgressBar from './progress-bar'
 import { formatTime } from '../../assets/js/util'
 import { PLAY_MODE } from '../../assets/js/constant'
@@ -108,6 +125,7 @@ export default {
     /**  *************  hooks  *************  **/
     const { modeIcon, changeMode } = useMode()
     const { getFavoriteIcon, toggleFavorite } = useFavorite()
+    const { cdCls, cdRef, cdImageRef } = useCd()
 
     /**  *************  watch 监控  *************  **/
     // 监控 currentSong 的变化，如果发生变化就能拿到 newSong，然后改变 player 页面的值
@@ -270,6 +288,9 @@ export default {
       changeMode,
       getFavoriteIcon,
       toggleFavorite,
+      cdCls,
+      cdRef,
+      cdImageRef,
       // function
       goBack,
       togglePlay,
@@ -381,7 +402,7 @@ export default {
               border: 10px solid rgba(255, 255, 255, 0.1);
             }
             .playing {
-              animation: rotate 20s linear infinite
+              animation: rotate 20s linear infinite // 20s 线性无限旋转
             }
           }
         }
