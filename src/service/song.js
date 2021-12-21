@@ -25,10 +25,12 @@ export function processSongs(songs) {
   })
 }
 
-const lyricMap = {}
+const lyricMap = {} // 两个缓存，一个是 song 本身，一个是 lyricMap
 
+// 根据歌曲的 mid 获取歌词。什么时候调用这个 getLyric 请求呢？应该是 currentSong 发生变化的时候
 export function getLyric(song) {
   if (song.lyric) {
+    // 如果这首歌的歌词存在，就直接返回
     return Promise.resolve(song.lyric)
   }
   const mid = song.mid

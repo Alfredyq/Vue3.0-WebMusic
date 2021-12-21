@@ -26,10 +26,31 @@
               >
             </div>
           </div>
-<!--          <div class="playing-lyric-wrapper">-->
-<!--            <div class="playing-lyric">{{playingLyric}}</div>-->
-<!--          </div>-->
+          <div class="playing-lyric-wrapper">
+            <div class="playing-lyric">{{playingLyric}}</div>
+          </div>
         </div>
+        <scroll
+          class="middle-r"
+          ref="lyricScrollRef">
+<!--          :style="middleRStyle"-->
+<!--        >-->
+          <div class="lyric-wrapper">
+            <div v-if="currentLyric" ref="lyricListRef">
+              <p class="text"
+                 :class="{'current': currentLineNum ===index}"
+                 v-for="(line,index) in currentLyric.lines"
+                 :key="line.num"
+              >
+                {{line.txt}}
+              </p>
+            </div>
+            <!--  出现纯音乐没有歌词的情况  -->
+            <div class="pure-music" v-show="pureMusicLyric">
+              <p>{{pureMusicLyric}}</p>
+            </div>
+          </div>
+        </scroll>
       </div>
       <div class="bottom">
         <div class="progress-wrapper">
@@ -83,14 +104,17 @@ import { computed, watch, ref } from 'vue'
 import useMode from './use-mode'
 import useFavorite from './use-favorite'
 import useCd from './use-cd'
+import useLyric from './use-lyric'
 import ProgressBar from './progress-bar'
 import { formatTime } from '../../assets/js/util'
 import { PLAY_MODE } from '../../assets/js/constant'
+import Scroll from '../base/scroll/scroll'
 
 export default {
   name: 'player',
   components: {
-    ProgressBar
+    ProgressBar,
+    Scroll
   },
   setup() {
     // data
@@ -126,6 +150,7 @@ export default {
     const { modeIcon, changeMode } = useMode()
     const { getFavoriteIcon, toggleFavorite } = useFavorite()
     const { cdCls, cdRef, cdImageRef } = useCd()
+    const { currentLyric, currentLineNum, pureMusicLyric, playingLyric, lyricScrollRef, lyricListRef, playLyric, stopLyric } = useLyric({ songReady, currentTime })
 
     /**  *************  watch 监控  *************  **/
     // 监控 currentSong 的变化，如果发生变化就能拿到 newSong，然后改变 player 页面的值
@@ -149,7 +174,13 @@ export default {
 
       const audioEl = audioRef.value
       console.log('audio.pause()')
-      newPlaying ? audioEl.play() : audioEl.pause()
+      if (newPlaying) {
+        audioEl.play()
+        playLyric()
+      } else {
+        audioEl.pause()
+        stopLyric()
+      }
     })
 
     /**  *************  自定义的方法 *************  **/
@@ -230,6 +261,7 @@ export default {
         return
       }
       songReady.value = true
+      playLyric()
     }
 
     function error() {
@@ -258,6 +290,8 @@ export default {
       progressChanging = true
       console.log('onProgressChanging: ' + progressChanging)
       currentTime.value = currentSong.value.duration * progress // 修改进度条前面的时间
+      playLyric() // 拖动的时候更新 Lyric 的进度，因为 Lyric 的进度是根据 currentTime 来计算的
+      stopLyric()
     }
 
     function onProgressChanged(progress) {
@@ -265,6 +299,10 @@ export default {
       progressChanging = false
       console.log('onProgressChanged: ' + progressChanging)
       audioRef.value.currentTime = currentTime.value = currentSong.value.duration * progress
+      // if (!playing.value) {
+      //   store.commit('setPlayingState', true)
+      // }
+      // playLyric() // 更新 Lyric 的进度
     }
 
     return {
@@ -291,6 +329,12 @@ export default {
       cdCls,
       cdRef,
       cdImageRef,
+      currentLyric,
+      currentLineNum,
+      pureMusicLyric,
+      playingLyric,
+      lyricScrollRef,
+      lyricListRef,
       // function
       goBack,
       togglePlay,
@@ -375,6 +419,7 @@ export default {
       font-size: 0;
       .middle-l {
         display: inline-block;
+        //display: none;
         vertical-align: top;
         position: relative;
         width: 100%;
