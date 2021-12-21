@@ -15,7 +15,12 @@
         <h1 class="title">{{ currentSong.name }}</h1>
         <h2 class="subtitle">{{ currentSong.singer }}</h2>
       </div>
-      <div class="middle">
+      <div class="middle"
+           @touchstart.prevent="onMiddleTouchStart"
+           @touchmove.prevent="onMiddleTouchMove"
+           @touchend.prevent="onMiddleTouchEnd"
+      >
+        <!--  旋转 CD 视图  -->
         <div class="middle-l" :style="middleLStyle">
           <div class="cd-wrapper" ref="cdWrapperRef">
             <div class="cd" ref="cdRef">
@@ -30,11 +35,12 @@
             <div class="playing-lyric">{{playingLyric}}</div>
           </div>
         </div>
+        <!--  动态歌词视图  -->
         <scroll
           class="middle-r"
-          ref="lyricScrollRef">
-<!--          :style="middleRStyle"-->
-<!--        >-->
+          ref="lyricScrollRef"
+          :style="middleRStyle"
+        >
           <div class="lyric-wrapper">
             <div v-if="currentLyric" ref="lyricListRef">
               <p class="text"
@@ -53,6 +59,10 @@
         </scroll>
       </div>
       <div class="bottom">
+        <div class="dot-wrapper">
+          <span class="dot" :class="{'active':currentShow==='cd'}"></span>
+          <span class="dot" :class="{'active':currentShow==='lyric'}"></span>
+        </div>
         <div class="progress-wrapper">
           <!--    歌曲当前播放进度（分秒）    -->
           <span class="time time-l">{{ formatTime(currentTime)}}</span>
@@ -105,6 +115,7 @@ import useMode from './use-mode'
 import useFavorite from './use-favorite'
 import useCd from './use-cd'
 import useLyric from './use-lyric'
+import useMiddleInteractive from './use-middle-interactive'
 import ProgressBar from './progress-bar'
 import { formatTime } from '../../assets/js/util'
 import { PLAY_MODE } from '../../assets/js/constant'
@@ -117,13 +128,14 @@ export default {
     Scroll
   },
   setup() {
-    // data
+    /**  *************  data  *************  **/
     const audioRef = ref(null)
     const songReady = ref(false)
     const currentTime = ref(0) // 歌曲当前播放时长
     let progressChanging = false // 是否在拖动进度条
 
-    // vuex 用 computed 是想让数据是响应式的
+    /**  *************  vuex  *************  **/
+    // 用 computed 是想让数据是响应式的
     const store = useStore()
     const fullScreen = computed(() => store.state.fullScreen)
     const currentSong = computed(() => store.getters.currentSong) // 当前播放曲目
@@ -151,6 +163,7 @@ export default {
     const { getFavoriteIcon, toggleFavorite } = useFavorite()
     const { cdCls, cdRef, cdImageRef } = useCd()
     const { currentLyric, currentLineNum, pureMusicLyric, playingLyric, lyricScrollRef, lyricListRef, playLyric, stopLyric } = useLyric({ songReady, currentTime })
+    const { currentShow, middleLStyle, middleRStyle, onMiddleTouchStart, onMiddleTouchMove, onMiddleTouchEnd } = useMiddleInteractive()
 
     /**  *************  watch 监控  *************  **/
     // 监控 currentSong 的变化，如果发生变化就能拿到 newSong，然后改变 player 页面的值
@@ -302,40 +315,53 @@ export default {
       // if (!playing.value) {
       //   store.commit('setPlayingState', true)
       // }
-      // playLyric() // 更新 Lyric 的进度
+      playLyric() // 更新 Lyric 的进度
+      console.log('playing: ' + playing.value)
+      if (!playing.value) { // 如果现在是暂停播放，则更新歌词位置后还要暂停歌词播放
+        stopLyric()
+      }
     }
 
     return {
-      // data
+      /**  data  **/
       currentTime,
-      // ref
+      /**  ref  **/
       audioRef,
-      // Vuex
+      /**  Vuex  **/
       fullScreen,
       currentSong,
       playing,
       currentIndex,
       playMode,
       playList,
-      // computed
+      /**  computed  **/
       playIcon,
       disableCls,
       progress,
-      // 钩子函数
+      /**  钩子函数  **/
       modeIcon,
       changeMode,
       getFavoriteIcon,
       toggleFavorite,
+      // cd
       cdCls,
       cdRef,
       cdImageRef,
+      // lyric
       currentLyric,
       currentLineNum,
       pureMusicLyric,
       playingLyric,
       lyricScrollRef,
       lyricListRef,
-      // function
+      // middle-interactive
+      currentShow,
+      middleLStyle,
+      middleRStyle,
+      onMiddleTouchStart,
+      onMiddleTouchMove,
+      onMiddleTouchEnd,
+      /**  function  **/
       goBack,
       togglePlay,
       pause,
