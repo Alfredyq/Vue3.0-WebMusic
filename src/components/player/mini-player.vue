@@ -21,8 +21,8 @@
                v-for="song in playlist"
                :key="song.id"
           >
-            <h2 class="name">{{currentSong.name}}</h2>
-            <p class="desc">{{currentSong.singer}}</p>
+            <h2 class="name">{{song.name}}</h2>
+            <p class="desc">{{song.singer}}</p>
           </div>
         </div>
       </div>
@@ -75,7 +75,12 @@
       const fullScreen = computed(() => store.state.fullScreen)
       const currentSong = computed(() => store.getters.currentSong)
       const playing = computed(() => store.state.playing)
-      const playlist = computed(() => store.state.playList)
+      const playlist = computed(() => {
+          console.log('playlist: ')
+          console.log(playlist)
+          return store.state.playList
+        }
+      )
 
       /**  *************  hooks  *************  **/
       const { cdCls, cdRef, cdImageRef } = useCd() // 让 mini-cd旋转
