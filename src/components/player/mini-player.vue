@@ -75,12 +75,7 @@
       const fullScreen = computed(() => store.state.fullScreen)
       const currentSong = computed(() => store.getters.currentSong)
       const playing = computed(() => store.state.playing)
-      const playlist = computed(() => {
-          console.log('playlist: ')
-          console.log(playlist)
-          return store.state.playList
-        }
-      )
+      const playlist = computed(() => store.state.playList)
 
       /**  *************  hooks  *************  **/
       const { cdCls, cdRef, cdImageRef } = useCd() // 让 mini-cd旋转
