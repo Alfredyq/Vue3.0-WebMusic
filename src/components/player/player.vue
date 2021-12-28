@@ -1,5 +1,5 @@
 <template>
-  <div class="player">
+  <div class="player" v-show="playList.length">
     <div class="normal-player"
          v-show="fullScreen"
     >
@@ -98,6 +98,9 @@
         </div>
       </div>
     </div>
+    <mini-player :progress="progress"
+                 :toggle-play="togglePlay"
+    ></mini-player>
     <audio ref="audioRef"
            @pause="pause"
            @canplay="ready"
@@ -110,13 +113,14 @@
 
 <script>
 import { useStore } from 'vuex'
-import { computed, watch, ref } from 'vue'
+import { computed, watch, ref, nextTick } from 'vue'
 import useMode from './use-mode'
 import useFavorite from './use-favorite'
 import useCd from './use-cd'
 import useLyric from './use-lyric'
 import useMiddleInteractive from './use-middle-interactive'
 import ProgressBar from './progress-bar'
+import MiniPlayer from './mini-player'
 import { formatTime } from '../../assets/js/util'
 import { PLAY_MODE } from '../../assets/js/constant'
 import Scroll from '../base/scroll/scroll'
@@ -125,11 +129,13 @@ export default {
   name: 'player',
   components: {
     ProgressBar,
-    Scroll
+    Scroll,
+    MiniPlayer
   },
   setup() {
     /**  *************  data  *************  **/
     const audioRef = ref(null)
+    const barRef = ref(null)
     const songReady = ref(false)
     const currentTime = ref(0) // 歌曲当前播放时长
     let progressChanging = false // 是否在拖动进度条
@@ -196,6 +202,13 @@ export default {
       }
     })
 
+    watch(fullScreen, async (newFullScreen) => {
+      if (newFullScreen) {
+        // 因为数据更改，到 DOM 发生变化，是发生到下一个 tick 上的。setOffset()内部有对DOM进行获取的操作，所以要加上nextTick()
+        await nextTick()
+        barRef.value.setOffset(progress.value)
+      }
+    })
     /**  *************  自定义的方法 *************  **/
     function goBack() {
       console.log('click back!')
@@ -327,6 +340,7 @@ export default {
       currentTime,
       /**  ref  **/
       audioRef,
+      barRef,
       /**  Vuex  **/
       fullScreen,
       currentSong,
