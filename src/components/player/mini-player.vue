@@ -75,7 +75,12 @@
       const fullScreen = computed(() => store.state.fullScreen)
       const currentSong = computed(() => store.getters.currentSong)
       const playing = computed(() => store.state.playing)
-      const playlist = computed(() => store.state.playList)
+      const playlist = computed(() => {
+          console.log('playlist: ')
+          console.log(playlist)
+          return store.state.playList
+        }
+      )
 
       /**  *************  hooks  *************  **/
       const { cdCls, cdRef, cdImageRef } = useCd() // 让 mini-cd旋转
@@ -191,7 +196,7 @@
       }
     }
     &.mini-enter-active, &.mini-leave-active {
-      transition: all 0.6s cubic-bezier(0.45, 0, 0.55, 1);
+      transition: all 0.6s cubic-bezier(0.45, 0, 0.55, 1); // 动画时长
     }
     &.mini-enter-from, &.mini-leave-to {
       opacity: 0;

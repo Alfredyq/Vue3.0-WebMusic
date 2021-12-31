@@ -1,103 +1,115 @@
 <template>
   <div class="player" v-show="playList.length">
-    <div class="normal-player"
-         v-show="fullScreen"
+    <!--    JavaScript 钩子   -->
+    <transition
+      name="normal"
+      @enter="enter"
+      @after-enter="afterEnter"
+      @leave="leave"
+      @after-leave="afterLeave"
     >
-      <div class="background">
-        <img :src="currentSong.pic">
-      </div>
-      <div class="top">
-        <div class="back"
-             @click="goBack"
-        >
-          <i class="icon-back"></i>
-        </div>
-        <h1 class="title">{{ currentSong.name }}</h1>
-        <h2 class="subtitle">{{ currentSong.singer }}</h2>
-      </div>
-      <div class="middle"
-           @touchstart.prevent="onMiddleTouchStart"
-           @touchmove.prevent="onMiddleTouchMove"
-           @touchend.prevent="onMiddleTouchEnd"
+      <div class="normal-player"
+           v-show="fullScreen"
       >
-        <!--  旋转 CD 视图  -->
-        <div class="middle-l" :style="middleLStyle">
-          <div class="cd-wrapper" ref="cdWrapperRef">
-            <div class="cd" ref="cdRef">
-              <img class="image"
-                   ref="cdImageRef"
-                   :class="cdCls"
-                   :src="currentSong.pic"
-              >
-            </div>
-          </div>
-          <div class="playing-lyric-wrapper">
-            <div class="playing-lyric">{{playingLyric}}</div>
-          </div>
+        <div class="background">
+          <img :src="currentSong.pic">
         </div>
-        <!--  动态歌词视图  -->
-        <scroll
-          class="middle-r"
-          ref="lyricScrollRef"
-          :style="middleRStyle"
+        <div class="top">
+          <div class="back"
+               @click="goBack"
+          >
+            <i class="icon-back"></i>
+          </div>
+          <h1 class="title">{{ currentSong.name }}</h1>
+          <h2 class="subtitle">{{ currentSong.singer }}</h2>
+        </div>
+        <div class="middle"
+             @touchstart.prevent="onMiddleTouchStart"
+             @touchmove.prevent="onMiddleTouchMove"
+             @touchend.prevent="onMiddleTouchEnd"
         >
-          <div class="lyric-wrapper">
-            <div v-if="currentLyric" ref="lyricListRef">
-              <p class="text"
-                 :class="{'current': currentLineNum ===index}"
-                 v-for="(line,index) in currentLyric.lines"
-                 :key="line.num"
-              >
-                {{line.txt}}
-              </p>
+          <!--  旋转 CD 视图  -->
+          <div class="middle-l" :style="middleLStyle">
+            <div class="cd-wrapper"
+                 ref="cdWrapperRef"
+            >
+              <div class="cd" ref="cdRef">
+                <img class="image"
+                     ref="cdImageRef"
+                     :class="cdCls"
+                     :src="currentSong.pic"
+                >
+              </div>
             </div>
-            <!--  出现纯音乐没有歌词的情况  -->
-            <div class="pure-music" v-show="pureMusicLyric">
-              <p>{{pureMusicLyric}}</p>
+            <div class="playing-lyric-wrapper">
+              <div class="playing-lyric">{{playingLyric}}</div>
             </div>
           </div>
-        </scroll>
+          <!--  动态歌词视图  -->
+          <scroll
+            class="middle-r"
+            ref="lyricScrollRef"
+            :style="middleRStyle"
+          >
+            <div class="lyric-wrapper">
+              <div v-if="currentLyric" ref="lyricListRef">
+                <p class="text"
+                   :class="{'current': currentLineNum ===index}"
+                   v-for="(line,index) in currentLyric.lines"
+                   :key="line.num"
+                >
+                  {{line.txt}}
+                </p>
+              </div>
+              <!--  出现纯音乐没有歌词的情况  -->
+              <div class="pure-music" v-show="pureMusicLyric">
+                <p>{{pureMusicLyric}}</p>
+              </div>
+            </div>
+          </scroll>
+        </div>
+        <div class="bottom">
+          <div class="dot-wrapper">
+            <span class="dot" :class="{'active':currentShow==='cd'}"></span>
+            <span class="dot" :class="{'active':currentShow==='lyric'}"></span>
+          </div>
+          <div class="progress-wrapper">
+            <!--    歌曲当前播放进度（分秒）    -->
+            <span class="time time-l">{{ formatTime(currentTime)}}</span>
+            <div class="progress-bar-wrapper">
+            <!--    监听 progress-bar emit传出来的两个事件 progress-changing 和 progress-changed   -->
+              <progress-bar
+                ref="barRef"
+                :progress="progress"
+                @progress-changing="onProgressChanging"
+                @progress-changed="onProgressChanged"
+              ></progress-bar>
+            </div>
+            <!--    歌曲完整播放长度（分秒）    -->
+            <span class="time time-r">{{ formatTime(currentSong.duration) }}</span>
+          </div>
+          <div class="operators">
+            <div class="icon i-left">
+              <i :class="modeIcon" @click="changeMode"></i>
+            </div>
+            <div class="icon i-left" :class="disableCls">
+              <i class="icon-prev" @click="prev" ></i>
+            </div>
+            <div class="icon i-center" :class="disableCls">
+            <!--  根据播放状态改变播放按钮  -->
+              <i :class="playIcon" @click="togglePlay"></i>
+            </div>
+            <div class="icon i-right" :class="disableCls">
+              <i class="icon-next" @click="next" ></i>
+            </div>
+            <div class="icon i-right">
+              <i :class="getFavoriteIcon(currentSong)" @click="toggleFavorite(currentSong)"></i>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="bottom">
-        <div class="dot-wrapper">
-          <span class="dot" :class="{'active':currentShow==='cd'}"></span>
-          <span class="dot" :class="{'active':currentShow==='lyric'}"></span>
-        </div>
-        <div class="progress-wrapper">
-          <!--    歌曲当前播放进度（分秒）    -->
-          <span class="time time-l">{{ formatTime(currentTime)}}</span>
-          <div class="progress-bar-wrapper">
-          <!--    监听 progress-bar emit传出来的两个事件 progress-changing 和 progress-changed   -->
-            <progress-bar
-              ref="barRef"
-              :progress="progress"
-              @progress-changing="onProgressChanging"
-              @progress-changed="onProgressChanged"
-            ></progress-bar>
-          </div>
-          <!--    歌曲完整播放长度（分秒）    -->
-          <span class="time time-r">{{ formatTime(currentSong.duration) }}</span>
-        </div>
-        <div class="operators">
-          <div class="icon i-left">
-            <i :class="modeIcon" @click="changeMode"></i>
-          </div>
-          <div class="icon i-left" :class="disableCls">
-            <i class="icon-prev" @click="prev" ></i>
-          </div>
-          <div class="icon i-center" :class="disableCls">
-          <!--  根据播放状态改变播放按钮  -->
-            <i :class="playIcon" @click="togglePlay"></i>
-          </div>
-          <div class="icon i-right" :class="disableCls">
-            <i class="icon-next" @click="next" ></i>
-          </div>
-          <div class="icon i-right">
-            <i :class="getFavoriteIcon(currentSong)" @click="toggleFavorite(currentSong)"></i>
-          </div>
-        </div>
-      </div>
-    </div>
+    </transition>
+
     <mini-player :progress="progress"
                  :toggle-play="togglePlay"
     ></mini-player>
@@ -119,6 +131,7 @@ import useFavorite from './use-favorite'
 import useCd from './use-cd'
 import useLyric from './use-lyric'
 import useMiddleInteractive from './use-middle-interactive'
+import useAnimation from './use-animation'
 import ProgressBar from './progress-bar'
 import MiniPlayer from './mini-player'
 import { formatTime } from '../../assets/js/util'
@@ -170,7 +183,7 @@ export default {
     const { cdCls, cdRef, cdImageRef } = useCd()
     const { currentLyric, currentLineNum, pureMusicLyric, playingLyric, lyricScrollRef, lyricListRef, playLyric, stopLyric } = useLyric({ songReady, currentTime })
     const { currentShow, middleLStyle, middleRStyle, onMiddleTouchStart, onMiddleTouchMove, onMiddleTouchEnd } = useMiddleInteractive()
-
+    const { cdWrapperRef, enter, afterEnter, leave, afterLeave } = useAnimation()
     /**  *************  watch 监控  *************  **/
     // 监控 currentSong 的变化，如果发生变化就能拿到 newSong，然后改变 player 页面的值
     watch(currentSong, (newSong) => {
@@ -375,6 +388,12 @@ export default {
       onMiddleTouchStart,
       onMiddleTouchMove,
       onMiddleTouchEnd,
+      // animation
+      cdWrapperRef,
+      enter,
+      afterEnter,
+      leave,
+      afterLeave,
       /**  function  **/
       goBack,
       togglePlay,
@@ -609,9 +628,9 @@ export default {
       }
     }
     &.normal-enter-active, &.normal-leave-active {
-      transition: all .6s;
+      transition: all .6s; // 过渡时间 0.6s，想看具体的过渡效果，可以将过渡时间改长一点
       .top, .bottom {
-        transition: all .6s cubic-bezier(0.45, 0, 0.55, 1);
+        transition: all .6s cubic-bezier(0.45, 0, 0.55, 1); // 贝塞尔曲线，让它有个不同的过渡动画效果
       }
     }
     &.normal-enter-from, &.normal-leave-to {
