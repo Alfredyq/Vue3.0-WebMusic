@@ -1,11 +1,14 @@
+<!--  播放列表  -->
 <template>
   <teleport to="body">
+<!--    控制整个列表的过渡效果-->
     <transition name="list-fade">
       <div
         class="playlist"
         v-show="visible && playlist.length"
         @click="hide"
       >
+        <!--    包裹的内容层，@click.stop 阻止冒泡   -->
         <div class="list-wrapper" @click.stop>
           <div class="list-header">
             <h1 class="title">
@@ -64,13 +67,14 @@
             <span>关闭</span>
           </div>
         </div>
+        <!--  删除歌曲的确认弹窗组件   -->
         <confirm
           ref="confirmRef"
           @confirm="confirmClear"
           text="是否清空播放列表？"
           confirm-btn-text="清空"
         ></confirm>
-        <add-song ref="addSongRef"></add-song>
+<!--        <add-song ref="addSongRef"></add-song>-->
       </div>
     </transition>
   </teleport>
@@ -79,7 +83,7 @@
 <script>
   import Scroll from '@/components/base/scroll/scroll'
   import Confirm from '@/components/base/confirm/confirm'
-  import AddSong from '@/components/add-song/add-song'
+  // import AddSong from '@/components/add-song/add-song'
   import { ref, computed, nextTick, watch } from 'vue'
   import { useStore } from 'vuex'
   import useMode from './use-mode'
@@ -88,7 +92,7 @@
   export default {
     name: 'playlist',
     components: {
-      AddSong,
+      // AddSong,
       Confirm,
       Scroll
     },
@@ -108,7 +112,9 @@
       const { modeIcon, modeText, changeMode } = useMode()
       const { getFavoriteIcon, toggleFavorite } = useFavorite()
 
+      // 观测 currentSong 是否发生变化，然后将播放列表的 scroll 滚动到对应的位置
       watch(currentSong, async (newSong) => {
+        // 播放列表是否可见
         if (!visible.value || !newSong.id) {
           return
         }
@@ -125,6 +131,8 @@
       async function show() {
         visible.value = true
 
+        // 为什么要在 nextTick 后进行刷新，因为这里数据刚变，但 dom 的改变发生在一个 nextTick 后，
+        // 而 refresh 依赖改变后的 dom，所以要在 refresh 前加一个 nextTick，等待渲染好的 DOM
         await nextTick()
         refreshScroll()
         scrollToCurrent()
@@ -134,6 +142,7 @@
         visible.value = false
       }
 
+      // 根据点击的歌曲修改 currentIndex ，因为 currentSong 也是根据 currentIndex 来修改的
       function selectItem(song) {
         const index = playlist.value.findIndex((item) => {
           return song.id === item.id
@@ -143,11 +152,15 @@
         store.commit('setPlayingState', true)
       }
 
+      // 拿到 scroll 实例，
       function refreshScroll() {
+        // scrollRef.value.scroll 就是 BetterScroll 对象
         scrollRef.value.scroll.refresh()
       }
 
+      // 滚动到当前播放的歌曲，利用 BetterScroll 的 scrollToElement 方法，可以滚动到对应的 DOM 元素上
       function scrollToCurrent() {
+        // 根据 currentSong 去遍历播放列表，找到当前歌曲在播放列表中的 索引值
         const index = sequenceList.value.findIndex((song) => {
           return currentSong.value.id === song.id
         })
@@ -159,6 +172,7 @@
         scrollRef.value.scroll.scrollToElement(target, 300)
       }
 
+      // 根据当前选中的 song，从播放列表中删除。
       function removeSong(song) {
         if (removing.value) {
           return
@@ -174,9 +188,11 @@
       }
 
       function showConfirm() {
+        // 调用 confirm 组件内部的 show 方法，改变 confirm 组件是否能被看见
         confirmRef.value.show()
       }
 
+      // 清空所有歌曲
       function confirmClear() {
         store.dispatch('clearSongList')
         hide()

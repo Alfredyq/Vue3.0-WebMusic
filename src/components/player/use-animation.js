@@ -1,4 +1,4 @@
-// 播放器全屏切换de过渡效果
+// 功能：点击mini播放器，实现全屏切换de过渡效果
 import { ref } from 'vue'
 import animations from 'create-keyframe-animation'
 

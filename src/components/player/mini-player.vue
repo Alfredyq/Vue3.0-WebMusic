@@ -1,3 +1,4 @@
+<!--  底部小播放器  -->
 <template>
   <transition name="mini">
     <div class="mini-player"
@@ -37,10 +38,10 @@
           ></i>
         </progress-circle>
       </div>
-<!--      <div class="control" @click.stop="showPlaylist">-->
-<!--        <i class="icon-playlist"></i>-->
-<!--      </div>-->
-<!--      <playlist ref="playlistRef"></playlist>-->
+      <div class="control" @click.stop="showPlaylist">
+        <i class="icon-playlist"></i>
+      </div>
+      <playlist ref="playlistRef"></playlist>
     </div>
   </transition>
 </template>
@@ -51,12 +52,12 @@
   import useCd from './use-cd'
   import ProgressCircle from './progress-circle'
   import useMiniSlider from './use-mini-slider'
-  // import Playlist from './playlist'
+  import Playlist from './playlist'
 
   export default {
     name: 'mini-player',
     components: {
-      // Playlist,
+      Playlist,
       ProgressCircle
     },
     // 父组件传进来的值，可以是参数也可以是函数

@@ -1,3 +1,4 @@
+<!--    播放器页面   -->
 <template>
   <div class="player" v-show="playList.length">
     <!--    JavaScript 钩子   -->
@@ -196,6 +197,7 @@ export default {
       audioEl.src = newSong.url
       console.log('watch currentSong!')
       audioEl.play() // 通过 audio 元素内置方法，播放歌曲。等歌曲缓冲好会触发 canplay，将 songReady置为 true
+      store.commit('setPlayingState', true)
     })
 
     watch(playing, (newPlaying) => {
@@ -256,10 +258,10 @@ export default {
         }
         // 提交数据
         store.commit('setCurrentIndex', index)
-        if (!playing.value) {
-          // 如果当前是暂停状态，按下上一首按钮，则跳到上一首开始播放
-          store.commit('setPlayingState', true)
-        }
+        // if (!playing.value) {
+        //   // 如果当前是暂停状态，按下上一首按钮，则跳到上一首开始播放
+        //   store.commit('setPlayingState', true)
+        // }
       }
     }
 
@@ -281,10 +283,10 @@ export default {
         }
         // 提交数据
         store.commit('setCurrentIndex', index)
-        if (!playing.value) {
-          // 如果当前是暂停状态，按下下一首按钮，则跳到下一首开始播放
-          store.commit('setPlayingState', true)
-        }
+        // if (!playing.value) {
+        //   // 如果当前是暂停状态，按下下一首按钮，则跳到下一首开始播放
+        //   store.commit('setPlayingState', true)
+        // }
       }
     }
 

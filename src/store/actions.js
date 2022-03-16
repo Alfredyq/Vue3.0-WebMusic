@@ -42,3 +42,47 @@ export function changeMode({ commit, state, getters }, mode) {
   commit('setCurrentIndex', index)
   commit('setPlayMode', mode)
 }
+
+// 根据 song ，从播放列表中删除这首 song
+export function removeSong({ commit, state }, song) {
+  // slice 是获取 sequenceList 和 playlist 的副本，因为不能直接对他们进行修改操作
+  const sequenceList = state.sequenceList.slice()
+  const playList = state.playList.slice()
+
+  const sequenceIndex = findIndex(sequenceList, song)
+  const playIndex = findIndex(playList, song)
+  if (sequenceIndex < 0 || playIndex < 0) {
+    return
+  }
+
+  sequenceList.splice(sequenceIndex, 1)
+  playList.splice(playIndex, 1)
+
+  // 如果删除的歌曲在当前播放歌曲的前面，则要进行特殊处理，对 currentIndex 进行以下修改
+  let currentIndex = state.currentIndex
+  if (playIndex < currentIndex || currentIndex === playList.length) {
+    currentIndex--
+  }
+
+  // Vuex 中对 state 数据的修改只能通过提交 mutation，所以这里只能使用 commit 方式对 sequenceList 和 playList 进行修改
+  commit('setSequenceList', sequenceList)
+  commit('setPlayList', playList)
+  commit('setCurrentIndex', currentIndex)
+  if (!playList.length) {
+    commit('setPlayingState', false)
+  }
+}
+
+// 清空歌曲，并且改变播放状态
+export function clearSongList({ commit }) {
+  commit('setSequenceList', [])
+  commit('setPlayList', [])
+  commit('setCurrentIndex', 0)
+  commit('setPlayingState', false)
+}
+
+function findIndex(list, song) {
+  return list.findIndex((item) => {
+    return item.id === song.id
+  })
+}
