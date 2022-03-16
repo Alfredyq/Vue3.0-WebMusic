@@ -10,12 +10,16 @@
 </template>
 
 <script>
-import { getSingerDetail } from '../service/singer'
-import { processSongs } from '../service/song'
 import MusicList from '../components/music-list/music-list'
 import storage from 'good-storage'
+import { getSingerDetail } from '../service/singer'
+import { processSongs } from '../service/song'
 import { SINGER_KEY } from '../assets/js/constant'
 
+// 写法一 与album.vue中业务代码类似，所以对类似代码做了抽离
+// export default createDetailComponent('singer-detail', SINGER_KEY, getSingerDetail)
+
+// 写法二
 export default {
   name: 'singer-detail',
   components: {
