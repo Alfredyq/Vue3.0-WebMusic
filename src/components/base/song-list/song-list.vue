@@ -5,6 +5,9 @@
         :key="song.id"
         @click="selectItem(song, index)"
     >
+      <div class="rank" v-if="rank">
+        <span :class="getRankCls(index)">{{ getRankText(index) }}</span>
+      </div>
       <div class="content">
         <h2 class="name">{{ song.name}}</h2>
         <p class="desc">{{ getDesc(song)}}</p>
@@ -22,7 +25,8 @@ export default {
       default() {
         return []
       }
-    }
+    },
+    rank: Boolean
   },
   emits: ['selected'],
   methods: {
@@ -32,6 +36,18 @@ export default {
     selectItem(song, index) {
       // 点击歌曲的时候，就会派发出去一个自定义的 select 事件
       this.$emit('selected', { song, index })
+    },
+    getRankCls(index) {
+      if (index <= 2) {
+        return `icon icon${index}`
+      } else {
+        return 'text'
+      }
+    },
+    getRankText(index) {
+      if (index > 2) {
+        return index + 1
+      }
     }
   }
 }

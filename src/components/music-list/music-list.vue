@@ -39,6 +39,7 @@
 <!--        调用song-list的地方就能监听到 song-list 传出来的 selectItem 事件，这里的 select是 song-list自定义的 emit派发事件，名字必须保持一致-->
         <song-list :songs="songs"
                    @selected="selectItem"
+                   :rank="rank"
         ></song-list>
       </div>
     </scroll>
@@ -72,7 +73,8 @@ export default {
     noResultText: {
       type: String,
       default: '抱歉，没有找到可播放的歌曲'
-    }
+    },
+    rank: Boolean
   },
   data() {
     return {
