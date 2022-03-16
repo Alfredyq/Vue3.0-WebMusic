@@ -1,3 +1,4 @@
+<!--    歌手列表    -->
 <template>
   <scroll
     class="index-list"
@@ -58,7 +59,8 @@
 </template>
 
 <script>
-import Scroll from '../base/scroll/scroll'
+// import Scroll from '../base/scroll/scroll'
+import Scroll from '../wrap-scroll'
 import useFixed from './use-fixed'
 import useShortcut from './use-shortcut'
 

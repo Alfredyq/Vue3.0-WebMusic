@@ -1,3 +1,4 @@
+<!--    歌曲列表组件    -->
 <template>
   <div class="music-list">
     <div class="back"
@@ -45,9 +46,10 @@
 </template>
 
 <script>
-import Scroll from '../base/scroll/scroll'
+// import Scroll from '../base/scroll/scroll'
+import Scroll from '../wrap-scroll'
 import SongList from '../base/song-list/song-list'
-import { mapActions } from 'vuex' // Vuex的语法糖，https://vuex.vuejs.org/zh/guide/actions.html#%E5%9C%A8%E7%BB%84%E4%BB%B6%E4%B8%AD%E5%88%86%E5%8F%91-action
+import { mapActions, mapState } from 'vuex' // Vuex的语法糖，https://vuex.vuejs.org/zh/guide/actions.html#%E5%9C%A8%E7%BB%84%E4%BB%B6%E4%B8%AD%E5%88%86%E5%8F%91-action
 
 const RESERVED_HEIGHT = 40 // 设置一个高度常量，歌手的歌单列表最多升到离页面顶端40px位置处
 
@@ -150,8 +152,10 @@ export default {
       }
     },
     scrollStyle() {
+      const bottom = this.playList.length ? '60px' : '0'
       return {
-        top: `${this.imageHeight}px` // 根据图片的高度，设置歌单列表离顶部的距离
+        top: `${this.imageHeight}px`, // 根据图片的高度，设置歌单列表离顶部的距离
+        bottom
       }
     },
     filterStyle() {
@@ -166,7 +170,10 @@ export default {
       return {
         backdropFilter: `blur(${blur}px)`
       }
-    }
+    },
+    ...mapState([
+      'playList'
+    ])
   },
   mounted () {
     // 获取class为bg-image的div高度
