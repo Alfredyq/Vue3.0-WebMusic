@@ -43,11 +43,13 @@ export default function usePullUpLoad(requestData, preventPullUpLoad) {
     scroll.value.destroy()
   })
 
+  // keep-alive 选中的时候允许 scroll 滚动
   onActivated(() => {
     scroll.value.enable()
     scroll.value.refresh()
   })
 
+  // keep-alive 未选中的时候，不允许 scroll 滚动
   onDeactivated(() => {
     scroll.value.disable()
   })
