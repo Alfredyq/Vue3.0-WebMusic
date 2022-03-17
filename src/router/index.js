@@ -28,8 +28,14 @@ const routes = [
   {
     path: '/search',
     name: 'Search',
-    component: Search
+    component: Search,
     // component: () => import(/* webpackChunkName: "about" */ '../views/About.vue')
+    children: [
+      {
+        path: ':id',
+        component: SingerDetail
+      }
+    ]
   },
   {
     path: '/singer',

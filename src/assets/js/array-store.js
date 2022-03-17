@@ -40,3 +40,12 @@ export function remove(key, compare) {
 export function load(key) { // 首次加载的时候从内存中读取原始数据
   return storage.get(key) || []
 }
+
+export function clear(key) {
+  storage.remove(key)
+  return []
+}
+
+export function saveAll(items, key) {
+  storage.set(key, items)
+}

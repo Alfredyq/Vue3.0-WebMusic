@@ -665,6 +665,7 @@ function registerSearch(app) {
   app.get('/api/search', (req, res) => {
     const url = 'https://c.y.qq.com/soso/fcgi-bin/search_for_qq_cp'
 
+    // 支持携带参数进行查询，query是输入的文字，page是页码，因为上下滑动会有页码，showSinger是是否展示歌手信息
     const { query, page, showSinger } = req.query
 
     const data = {
@@ -672,7 +673,7 @@ function registerSearch(app) {
       g_tk_new_20200303: token,
       w: query,
       p: page,
-      perpage: 20,
+      perpage: 20, // 每页数量
       n: 20,
       zhidaqu: 1,
       catZhida: showSinger === 'true' ? 1 : 0,
@@ -726,8 +727,9 @@ function registerSearch(app) {
           }
         }
 
+        // 分页相关
         const { curnum, curpage, totalnum } = songData
-        const hasMore = 20 * (curpage - 1) + curnum < totalnum
+        const hasMore = 20 * (curpage - 1) + curnum < totalnum // 布尔值，判断是或否还有多余数据
 
         res.json({
           code: ERR_OK,

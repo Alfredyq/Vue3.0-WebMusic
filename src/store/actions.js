@@ -81,6 +81,34 @@ export function clearSongList({ commit }) {
   commit('setPlayingState', false)
 }
 
+// 点击歌曲，添加到播放列表
+export function addSong({ commit, state }, song) {
+  const playList = state.playList.slice()
+  const sequenceList = state.sequenceList.slice()
+  let currentIndex = state.currentIndex
+  const playIndex = findIndex(playList, song)
+
+  // 该歌曲在 playList 已经存在
+  if (playIndex > -1) {
+    currentIndex = playIndex
+  } else {
+    // playList 不存在该歌曲
+    playList.push(song)
+    currentIndex = playList.length - 1
+  }
+
+  const sequenceIndex = findIndex(sequenceList, song)
+  if (sequenceIndex === -1) {
+    sequenceList.push(song)
+  }
+
+  commit('setSequenceList', sequenceList)
+  commit('setPlayList', playList)
+  commit('setCurrentIndex', currentIndex)
+  commit('setPlayingState', true)
+  commit('setFullScreen', true)
+}
+
 function findIndex(list, song) {
   return list.findIndex((item) => {
     return item.id === song.id
