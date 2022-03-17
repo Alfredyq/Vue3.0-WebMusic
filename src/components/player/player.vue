@@ -133,6 +133,7 @@ import useCd from './use-cd'
 import useLyric from './use-lyric'
 import useMiddleInteractive from './use-middle-interactive'
 import useAnimation from './use-animation'
+import usePlayHistory from './use-play-history'
 import ProgressBar from './progress-bar'
 import MiniPlayer from './mini-player'
 import { formatTime } from '../../assets/js/util'
@@ -185,6 +186,8 @@ export default {
     const { currentLyric, currentLineNum, pureMusicLyric, playingLyric, lyricScrollRef, lyricListRef, playLyric, stopLyric } = useLyric({ songReady, currentTime })
     const { currentShow, middleLStyle, middleRStyle, onMiddleTouchStart, onMiddleTouchMove, onMiddleTouchEnd } = useMiddleInteractive()
     const { cdWrapperRef, enter, afterEnter, leave, afterLeave } = useAnimation()
+    const { savePlay } = usePlayHistory()
+
     /**  *************  watch 监控  *************  **/
     // 监控 currentSong 的变化，如果发生变化就能拿到 newSong，然后改变 player 页面的值
     watch(currentSong, (newSong) => {
@@ -303,6 +306,7 @@ export default {
       }
       songReady.value = true
       playLyric()
+      savePlay(currentSong.value)
     }
 
     function error() {
@@ -372,6 +376,7 @@ export default {
       changeMode,
       getFavoriteIcon,
       toggleFavorite,
+      savePlay,
       // cd
       cdCls,
       cdRef,

@@ -6,7 +6,7 @@ function insertArray(arr, val, compare, maxLen) {
   if (index === 0) { // 如果数据存在，直接返回，不重复保存
     return
   }
-  if (index > 0) {
+  if (index > 0) { // 数据存在，但不在队首
     arr.splice(index, 1)
   }
   arr.unshift(val) // 将数据插入到数组的最顶端

@@ -58,6 +58,7 @@
             </transition-group>
           </scroll>
           <div class="list-add">
+            <!--  click点击，展示出 addSong 页面  -->
             <div class="add" @click="showAddSong">
               <i class="icon-add"></i>
               <span class="text">添加歌曲到队列</span>
@@ -74,7 +75,7 @@
           text="是否清空播放列表？"
           confirm-btn-text="清空"
         ></confirm>
-<!--        <add-song ref="addSongRef"></add-song>-->
+        <add-song ref="addSongRef"></add-song>
       </div>
     </transition>
   </teleport>
@@ -83,7 +84,7 @@
 <script>
   import Scroll from '@/components/base/scroll/scroll'
   import Confirm from '@/components/base/confirm/confirm'
-  // import AddSong from '@/components/add-song/add-song'
+  import AddSong from '@/components/add-song/add-song'
   import { ref, computed, nextTick, watch } from 'vue'
   import { useStore } from 'vuex'
   import useMode from './use-mode'
@@ -92,7 +93,7 @@
   export default {
     name: 'playlist',
     components: {
-      // AddSong,
+      AddSong,
       Confirm,
       Scroll
     },

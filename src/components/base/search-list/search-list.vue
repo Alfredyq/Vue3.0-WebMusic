@@ -39,6 +39,7 @@
     methods: {
       // 内部不实现具体的业务，只是把事件派发出去，可以实现很好的解耦
       selectItem(item) {
+        console.log('11111111')
         this.$emit('select', item)
       },
       deleteItem(item) {
