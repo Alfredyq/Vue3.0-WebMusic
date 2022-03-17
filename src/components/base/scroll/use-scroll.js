@@ -1,6 +1,6 @@
 import BetterScroll from '@better-scroll/core'
 import ObserveDOM from '@better-scroll/observe-dom'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, onActivated, onDeactivated, ref } from 'vue'
 
 BetterScroll.use(ObserveDOM)
 
@@ -26,6 +26,17 @@ export default function useScroll(wrapperRef, options, emit) {
 
   onUnmounted(() => {
     scroll.value.destroy()
+  })
+
+  // keep-alive 选中的时候允许 scroll 滚动
+  onActivated(() => {
+    scroll.value.enable()
+    scroll.value.refresh()
+  })
+
+  // keep-alive 未选中的时候，不允许 scroll 滚动
+  onDeactivated(() => {
+    scroll.value.disable()
   })
 
   return scroll

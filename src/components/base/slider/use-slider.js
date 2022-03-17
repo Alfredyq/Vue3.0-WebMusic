@@ -35,11 +35,13 @@ export default function useSlider(wrapperRef) {
     slider.value.destroy()
   })
 
+  // keep-alive 选中的时候，允许 slider 滑动
   onActivated(() => {
     slider.value.enable()
     slider.value.refresh()
   })
 
+  // keep-alive 未选中的时候，不允许 slider 滑动
   onDeactivated(() => {
     slider.value.disable()
   })

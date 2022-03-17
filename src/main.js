@@ -5,9 +5,30 @@ import store from './store'
 import LazyPlugin from 'vue3-lazy'
 import loadingDirective from './components/base/loading/directive'
 import noResultDirective from './components/base/no-result/directive'
+import { load, saveAll } from '@/assets/js/array-store'
+import { FAVORITE_KEY, PLAY_KEY } from '@/assets/js/constant'
+import { processSongs } from '@/service/song'
 
 // 引入全局样式文件
 import '@/assets/scss/index.scss'
+
+// 从本地缓存中加载 favoriteSongs，然后更新所有歌曲的 url
+const favoriteSongs = load(FAVORITE_KEY)
+if (favoriteSongs.length > 0) {
+  processSongs(favoriteSongs).then((songs) => {
+    store.commit('setFavoriteList', songs)
+    saveAll(songs, FAVORITE_KEY)
+  })
+}
+
+// 同理，更新所有 historySongs 的 url
+const historySongs = load(PLAY_KEY)
+if (historySongs.length > 0) {
+  processSongs(historySongs).then((songs) => {
+    store.commit('setPlayHistory', songs) // 保存到 store 中
+    saveAll(songs, PLAY_KEY) // 保存到 localStorage 中
+  })
+}
 
 /** *********** 版本一 *********** **/
 // createApp(App).use(store).use(router).mount('#app')

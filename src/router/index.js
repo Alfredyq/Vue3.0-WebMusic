@@ -6,6 +6,7 @@ import TopList from '@/views/top-list'
 import SingerDetail from '@/views/singer-detail'
 import Album from '@/views/album'
 import TopDetail from '@/views/top-detail'
+import UserCenter from '@/views/user-center'
 
 const routes = [
   {
@@ -58,6 +59,13 @@ const routes = [
         component: TopDetail
       }
     ]
+  },
+  {
+    path: '/user',
+    components: {
+      user: UserCenter
+    }
+    // component: UserCenter
   }
 ]
 
